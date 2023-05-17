@@ -14,14 +14,12 @@ pub struct Reference {
     #[serde(rename = "$ref")]
     r#ref: String,
 }
-// #[derive(Deserialize, Debug, PartialEq)]
-// #[serde(untagged)]
-// pub enum OrRef<T> {
-//     Value(T),
-//     Ref(Reference),
-// }
-
-type OrRef<T> = T;
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(untagged)]
+pub enum OrRef<T> {
+    Ref(Reference), // this needs to be first, because SchemaObject does also support references
+    Value(T),
+}
 
 // TODO?
 type RuntimeExpression = String;
@@ -235,7 +233,7 @@ pub struct ErrorObject {
     /// REQUIRED. A String providing a short description of the error. The message SHOULD be limited to a concise single sentence.
     pub message: String,
     /// A Primitive or Structured value that contains additional information about the error. This may be omitted. The value of this member is defined by the Server (e.g. detailed error information, nested errors etc.).
-    pub data: Option<serde_json::Value>
+    pub data: Option<serde_json::Value>,
 }
 
 #[non_exhaustive]

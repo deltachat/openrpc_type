@@ -17,8 +17,8 @@ See https://github.com/open-rpc/typings if you need a code generator for types r
 
 ## Todo
 
-- [ ] Make references work (`OrRef` type, currently it does not parse correctly)
-- [ ] Implement automated testing (smoke tests are sufficient for now)
+- [X] Make references work (`OrRef` type, currently it does not parse correctly)
+- [X] Implement automated testing (smoke tests are sufficient for now)
   - [x] add more examples (from openrpc)
 
 ### Ideas
@@ -43,3 +43,9 @@ run all tests, even if some fail:
 ```
 cargo test --no-fail-fast
 ```
+
+To test the parsing of a file you can run it through the "cli":
+```
+cargo run -- example_files/openrpc-examples/simple-math-openrpc.json > result
+```
+(pipe output to a file or to `|less`, because the file can be very long)
