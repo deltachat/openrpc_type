@@ -363,15 +363,3 @@ pub struct Components {
     pub tags: HashMap<String, Tag>,
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::OpenRpcDoc;
-
-    #[test]
-    fn test() {
-        let doc: OpenRpcDoc =
-            serde_json::from_str(include_str!("../example_files/yerpc_axum_openrpc.json")).unwrap();
-        eprintln!("{doc:#?}");
-        panic!();
-    }
-}

@@ -13,7 +13,7 @@ See https://github.com/open-rpc/typings if you need a code generator for types r
 
 - [ ] Make references work (`OrRef` type, currently it does not parse correctly)
 - [ ] Implement automated testing (smoke tests are sufficient for now)
-   - [X] add more examples (from openrpc)
+  - [x] add more examples (from openrpc)
 
 ### Ideas
 
@@ -22,10 +22,18 @@ See https://github.com/open-rpc/typings if you need a code generator for types r
 ### Less Priority
 
 - [ ] `ErrorObject.data` (maybe serde_json::Value?)
-- [X] `LinkObject`
-- [X] `ExampleObject`
+- [x] `LinkObject`
+- [x] `ExampleObject`
 
 ## License
 
 MIT or Apache, whatever suits you best.
 Most Documentation comments are under Apache License 2.0, because they were taken from https://spec.open-rpc.org/.
+
+## Testing Tips
+
+run all tests, even if some fail:
+
+```
+cargo test --no-fail-fast
+```
