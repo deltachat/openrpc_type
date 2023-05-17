@@ -88,7 +88,7 @@ pub struct License {
 
 pub struct ServerObject {
     /// REQUIRED. A name to be used as the cannonical name for the server.
-    pub name: String,
+    pub name: Option<String>, // changed to optional because official examples don't follow the spec, see https://github.com/open-rpc/examples/issues/647 for details
     /// REQUIRED. A URL to the target host.
     /// This URL supports Server Variables and MAY be relative,
     /// to indicate that the host location is relative to the location where the OpenRPC document is being served.
@@ -362,4 +362,3 @@ pub struct Components {
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub tags: HashMap<String, Tag>,
 }
-

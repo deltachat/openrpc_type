@@ -9,6 +9,10 @@ We made this to use as a base for a code generator that generates wrapper code i
 
 See https://github.com/open-rpc/typings if you need a code generator for types right now.
 
+## Places where this crate not follows the spec:
+
+- `ServerObject.name` attribute is currently optional, where in the spec it is required, because the official examples don't follow the spec here, see: https://github.com/open-rpc/examples/issues/647
+
 ## Todo
 
 - [ ] Make references work (`OrRef` type, currently it does not parse correctly)
