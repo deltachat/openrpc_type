@@ -13,6 +13,8 @@ See https://github.com/open-rpc/typings if you need a code generator for types r
 
 - `ServerObject.name` attribute is currently optional, where in the spec it is required, because the official examples don't follow the spec here, see: https://github.com/open-rpc/examples/issues/647
 
+- `LinkObject.name` attribute is currently optional, same reason as above, see https://github.com/open-rpc/examples/issues/648
+
 ## Todo
 
 - [ ] Make references work (`OrRef` type, currently it does not parse correctly)

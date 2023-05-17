@@ -242,7 +242,7 @@ pub struct ErrorObject {
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct LinkObject {
     /// REQUIRED. Cannonical name of the link.
-    pub name: String,
+    pub name: Option<String>, // currently optional because official example violates the spec: https://github.com/open-rpc/examples/issues/648
     /// A description of the link.
     /// GitHub Flavored Markdown syntax MAY be used for rich text representation.
     pub description: Option<String>,
