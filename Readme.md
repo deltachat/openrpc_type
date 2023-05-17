@@ -25,7 +25,7 @@ See https://github.com/open-rpc/typings if you need a code generator for types r
 
 ### Less Priority
 
-- [ ] `ErrorObject.data` (maybe serde_json::Value?)
+- [X] `ErrorObject.data` (maybe serde_json::Value?)
 - [x] `LinkObject`
 - [x] `ExampleObject`
 
