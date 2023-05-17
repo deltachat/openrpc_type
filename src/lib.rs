@@ -225,7 +225,6 @@ pub struct ContentDescriptor {
     pub deprecated: bool,
 }
 
-
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct ErrorObject {
     /// REQUIRED. A Number that indicates the error type that occurred.
@@ -239,7 +238,7 @@ pub struct ErrorObject {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
-pub struct LinkObject; // TODO
+pub struct LinkObject {} // TODO
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
@@ -273,25 +272,68 @@ pub struct ExamplePairingObject {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
-pub struct ExampleObject; // TODO
+#[serde(untagged)]
+pub enum ExampleObject {
+    Value {
+        /// Cannonical name of the example.
+        name: Option<String>,
+        /// Short description for the example.
+        summary: Option<String>,
+        /// A verbose explanation of the example.
+        /// GitHub Flavored Markdown syntax MAY be used for rich text representation.
+        description: Option<String>,
+        /// Embedded literal example.
+        /// The value field and externalValue field are mutually exclusive.
+        /// To represent examples of media types that cannot naturally represented in JSON,
+        /// use a string value to contain the example, escaping where necessary.
+        value: serde_json::Value,
+    },
+    ExternalValue {
+        /// Cannonical name of the example.
+        name: Option<String>,
+        /// Short description for the example.
+        summary: Option<String>,
+        /// A verbose explanation of the example.
+        /// GitHub Flavored Markdown syntax MAY be used for rich text representation.
+        description: Option<String>,
+        /// A URL that points to the literal example.
+        /// This provides the capability to reference examples that cannot easily be included in JSON documents.
+        /// The value field and externalValue field are mutually exclusive.
+        #[serde(rename = "externalValue")]
+        external_value: String,
+    },
+}
 
 #[derive(Deserialize, Debug, Default, PartialEq)]
 pub struct Components {
     /// An object to hold reusable Content Descriptor Objects.
-    #[serde(rename = "contentDescriptors")]
+    #[serde(
+        rename = "contentDescriptors",
+        default,
+        skip_serializing_if = "HashMap::is_empty"
+    )]
     pub content_descriptors: HashMap<String, ContentDescriptor>,
     /// An object to hold reusable Schema Objects.
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub schemas: HashMap<String, SchemaObject>,
     /// An object to hold reusable Example Objects.
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub examples: HashMap<String, ExampleObject>,
     /// An object to hold reusable Link Objects.
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub links: HashMap<String, LinkObject>,
     /// An object to hold reusable Error Objects.
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub errors: HashMap<String, ErrorObject>,
     /// An object to hold reusable Example Pairing Objects.
-    #[serde(rename = "examplePairingObjects")]
+    #[serde(
+        rename = "examplePairingObjects",
+        default,
+        skip_serializing_if = "HashMap::is_empty"
+    )]
     pub example_pairing_objects: HashMap<String, ExamplePairingObject>,
     /// An object to hold reusable Tag Objects.
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub tags: HashMap<String, Tag>,
 }
 
