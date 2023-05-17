@@ -237,8 +237,34 @@ pub struct ErrorObject {
     // TODO: data has `any` type, not sure how to best represent this here
 }
 
+#[non_exhaustive]
 #[derive(Deserialize, Debug, PartialEq)]
-pub struct LinkObject {} // TODO
+pub struct LinkObject {
+    /// REQUIRED. Cannonical name of the link.
+    pub name: String,
+    /// A description of the link.
+    /// GitHub Flavored Markdown syntax MAY be used for rich text representation.
+    pub description: Option<String>,
+    /// Short description for the link.
+    pub summary: Option<String>,
+    /// The name of an existing, resolvable OpenRPC method, as defined with a unique method.
+    /// This field MUST resolve to a unique Method Object.
+    /// As opposed to Open Api, Relative method values ARE NOT permitted.
+    pub method: Option<String>,
+    /// A map representing parameters to pass to a method as specified with method.
+    /// The key is the parameter name to be used,
+    /// whereas the value can be a constant or a runtime expression to be evaluated and passed to the linked method.
+    pub params: HashMap<String, LinkObjectParameter>,
+    /// A server object to be used by the target method.
+    pub server: Option<ServerObject>,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(untagged)]
+pub enum LinkObjectParameter {
+    Value(serde_json::Value),
+    RuntimeExpression(RuntimeExpression),
+}
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
