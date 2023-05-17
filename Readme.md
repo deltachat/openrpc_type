@@ -13,16 +13,17 @@ See https://github.com/open-rpc/typings if you need a code generator for types r
 
 - [ ] Make references work (`OrRef` type, currently it does not parse correctly)
 - [ ] Implement automated testing (smoke tests are sufficient for now)
+   - [X] add more examples (from openrpc)
 
 ### Ideas
 
-- [ ] Maybe add some convenience function for resolving references?
+- [ ] Maybe add some convenience function for resolving references? (only local ones remote ones will error for now I'd say)
 
 ### Less Priority
 
 - [ ] `ErrorObject.data` (maybe serde_json::Value?)
 - [ ] `LinkObject`
-- [ ] `ExampleObject`
+- [X] `ExampleObject`
 
 ## License
 
