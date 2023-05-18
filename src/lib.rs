@@ -7,8 +7,8 @@ use serde::Deserialize;
 
 // modelled after https://spec.open-rpc.org/#server-variable-object (also takes docs from there)
 
-pub trait Referable<T> {
-    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a T, String>;
+pub trait Referable {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String>;
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -21,12 +21,12 @@ pub struct Reference {
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
-pub enum OrRef<T: Referable<T>> {
+pub enum OrRef<T: Referable> {
     Ref(Reference), // this needs to be first, because SchemaObject does also support references
     Value(T),
 }
 
-impl<T: Referable<T>> OrRef<T> {
+impl<T: Referable> OrRef<T> {
     pub fn resolve<'a>(&'a self, doc: &'a OpenRpcDoc) -> Result<&'a T, String> {
         // todo real error
         match self {
@@ -188,7 +188,7 @@ pub struct Method {
     pub examples: Vec<OrRef<ExamplePairingObject>>, // the OrRef is not in the specs, but it is part of the components - see https://github.com/open-rpc/spec/pull/379
 }
 
-impl Referable<Method> for Method {
+impl Referable for Method {
     fn resolve_reference<'a>(_doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
         // todo real error
         if !reference.starts_with('#') {
@@ -215,7 +215,7 @@ pub struct Tag {
     pub external_docs: Option<ExternalDocumentation>,
 }
 
-impl Referable<Tag> for Tag {
+impl Referable for Tag {
     fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
         // todo real error
         if !reference.starts_with('#') {
@@ -274,7 +274,7 @@ pub struct ContentDescriptor {
     pub deprecated: bool,
 }
 
-impl Referable<ContentDescriptor> for ContentDescriptor {
+impl Referable for ContentDescriptor {
     fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
         // todo real error
         if !reference.starts_with('#') {
@@ -298,7 +298,7 @@ impl Referable<ContentDescriptor> for ContentDescriptor {
     }
 }
 
-impl Referable<SchemaObject> for SchemaObject {
+impl Referable for SchemaObject {
     fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
         // todo real error
         if !reference.starts_with('#') {
@@ -335,7 +335,7 @@ pub struct ErrorObject {
     pub data: Option<serde_json::Value>,
 }
 
-impl Referable<ErrorObject> for ErrorObject {
+impl Referable for ErrorObject {
     fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
         // todo real error
         if !reference.starts_with('#') {
@@ -381,7 +381,7 @@ pub struct LinkObject {
     pub server: Option<ServerObject>,
 }
 
-impl Referable<LinkObject> for LinkObject {
+impl Referable for LinkObject {
     fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
         // todo real error
         if !reference.starts_with('#') {
@@ -442,7 +442,7 @@ pub struct ExamplePairingObject {
     /// Example result. When undefined, the example pairing represents usage of the method as a notification.
     pub result: Option<OrRef<ExampleObject>>,
 }
-impl Referable<ExamplePairingObject> for ExamplePairingObject {
+impl Referable for ExamplePairingObject {
     fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
         // todo real error
         if !reference.starts_with('#') {
@@ -499,7 +499,7 @@ pub enum ExampleObject {
     },
 }
 
-impl Referable<ExampleObject> for ExampleObject {
+impl Referable for ExampleObject {
     fn resolve_reference<'a>(
         doc: &'a OpenRpcDoc,
         reference: &str,
