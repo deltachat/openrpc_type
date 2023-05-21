@@ -2,23 +2,39 @@
 ///! The documentation comments are taken from https://github.com/open-rpc/spec/ and licensed under "Apache License 2.0"
 use std::collections::HashMap;
 
+use anyhow::bail;
 use schemars::schema::SchemaObject;
 use serde::Deserialize;
 
 // modelled after https://spec.open-rpc.org/#server-variable-object (also takes docs from there)
+
+pub trait Referable {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self>;
+}
 
 #[derive(Deserialize, Debug, PartialEq)]
 /// A simple object to allow referencing other components in the specification, internally and externally.
 /// The Reference Object is defined by JSON Schema and follows the same structure, behavior and rules.
 pub struct Reference {
     #[serde(rename = "$ref")]
-    r#ref: String,
+    pub r#ref: String,
 }
+
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
-pub enum OrRef<T> {
+pub enum OrRef<T: Referable> {
     Ref(Reference), // this needs to be first, because SchemaObject does also support references
     Value(T),
+}
+
+impl<T: Referable> OrRef<T> {
+    pub fn resolve<'a>(&'a self, doc: &'a OpenRpcDoc) -> anyhow::Result<&'a T> {
+        // todo real error
+        match self {
+            OrRef::Ref(Reference { r#ref }) => T::resolve_reference(doc, r#ref),
+            OrRef::Value(value) => Ok(value),
+        }
+    }
 }
 
 // TODO?
@@ -170,7 +186,17 @@ pub struct Method {
     pub param_structure: ParamStructure,
     /// Array of Example Pairing Object where each example includes a valid params-to-result Content Descriptor pairing.
     #[serde(default)]
-    pub examples: Vec<ExamplePairingObject>,
+    pub examples: Vec<OrRef<ExamplePairingObject>>, // the OrRef is not in the specs, but it is part of the components - see https://github.com/open-rpc/spec/pull/379
+}
+
+impl Referable for Method {
+    fn resolve_reference<'a>(_doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
+        // todo real error
+        if !reference.starts_with('#') {
+            bail!("only local references are supported by the script at the moment");
+        }
+        bail!("there is no local referencing for methods")
+    }
 }
 
 #[non_exhaustive]
@@ -186,6 +212,28 @@ pub struct Tag {
     /// Additional external documentation for this tag.
     #[serde(rename = "externalDocs")]
     pub external_docs: Option<ExternalDocumentation>,
+}
+
+impl Referable for Tag {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
+        // todo real error
+        if !reference.starts_with('#') {
+            bail!("only local references are supported by the script at the moment");
+        }
+        const PREFIX: &str = "#/components/tags/";
+        if !reference.starts_with(PREFIX) {
+            bail!("references should only reference inside of components");
+        }
+        if let Some((_key, value)) = doc
+            .components
+            .tags
+            .get_key_value(reference.trim_start_matches(PREFIX))
+        {
+            Ok(value)
+        } else {
+            bail!("reference not found: {reference}");
+        }
+    }
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -223,6 +271,50 @@ pub struct ContentDescriptor {
     pub deprecated: bool,
 }
 
+impl Referable for ContentDescriptor {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
+        // todo real error
+        if !reference.starts_with('#') {
+            bail!("only local references are supported by the script at the moment");
+        }
+        const PREFIX: &str = "#/components/contentDescriptors/";
+        if !reference.starts_with(PREFIX) {
+            bail!("references should only reference inside of components");
+        }
+        if let Some((_key, value)) = doc
+            .components
+            .content_descriptors
+            .get_key_value(reference.trim_start_matches(PREFIX))
+        {
+            Ok(value)
+        } else {
+            bail!("reference not found: {reference}");
+        }
+    }
+}
+
+impl Referable for SchemaObject {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
+        // todo real error
+        if !reference.starts_with('#') {
+            bail!("only local references are supported by the script at the moment");
+        }
+        const PREFIX: &str = "#/components/schemas/";
+        if !reference.starts_with(PREFIX) {
+            bail!("references should only reference inside of components");
+        }
+        if let Some((_key, value)) = doc
+            .components
+            .schemas
+            .get_key_value(reference.trim_start_matches(PREFIX))
+        {
+            Ok(value)
+        } else {
+            bail!("reference not found: {reference}");
+        }
+    }
+}
+
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct ErrorObject {
     /// REQUIRED. A Number that indicates the error type that occurred.
@@ -234,6 +326,28 @@ pub struct ErrorObject {
     pub message: String,
     /// A Primitive or Structured value that contains additional information about the error. This may be omitted. The value of this member is defined by the Server (e.g. detailed error information, nested errors etc.).
     pub data: Option<serde_json::Value>,
+}
+
+impl Referable for ErrorObject {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
+        // todo real error
+        if !reference.starts_with('#') {
+            bail!("only local references are supported by the script at the moment");
+        }
+        const PREFIX: &str = "#/components/errors/";
+        if !reference.starts_with(PREFIX) {
+            bail!("references should only reference inside of components");
+        }
+        if let Some((_key, value)) = doc
+            .components
+            .errors
+            .get_key_value(reference.trim_start_matches(PREFIX))
+        {
+            Ok(value)
+        } else {
+            bail!("reference not found: {reference}");
+        }
+    }
 }
 
 #[non_exhaustive]
@@ -256,6 +370,28 @@ pub struct LinkObject {
     pub params: HashMap<String, LinkObjectParameter>,
     /// A server object to be used by the target method.
     pub server: Option<ServerObject>,
+}
+
+impl Referable for LinkObject {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
+        // todo real error
+        if !reference.starts_with('#') {
+            bail!("only local references are supported by the script at the moment");
+        }
+        const PREFIX: &str = "#/components/links/";
+        if !reference.starts_with(PREFIX) {
+            bail!("references should only reference inside of components");
+        }
+        if let Some((_key, value)) = doc
+            .components
+            .links
+            .get_key_value(reference.trim_start_matches(PREFIX))
+        {
+            Ok(value)
+        } else {
+            bail!("reference not found: {reference}");
+        }
+    }
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -295,6 +431,27 @@ pub struct ExamplePairingObject {
     /// Example result. When undefined, the example pairing represents usage of the method as a notification.
     pub result: Option<OrRef<ExampleObject>>,
 }
+impl Referable for ExamplePairingObject {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
+        // todo real error
+        if !reference.starts_with('#') {
+            bail!("only local references are supported by the script at the moment");
+        }
+        const PREFIX: &str = "#/components/examplePairingObjects/";
+        if !reference.starts_with(PREFIX) {
+            bail!("references should only reference inside of components");
+        }
+        if let Some((_key, value)) = doc
+            .components
+            .example_pairing_objects
+            .get_key_value(reference.trim_start_matches(PREFIX))
+        {
+            Ok(value)
+        } else {
+            bail!("reference not found: {reference}");
+        }
+    }
+}
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
@@ -327,6 +484,28 @@ pub enum ExampleObject {
         #[serde(rename = "externalValue")]
         external_value: String,
     },
+}
+
+impl Referable for ExampleObject {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
+        // todo real error
+        if !reference.starts_with('#') {
+            bail!("only local references are supported by the script at the moment");
+        }
+        const PREFIX: &str = "#/components/examples/";
+        if !reference.starts_with(PREFIX) {
+            bail!("references should only reference inside of components");
+        }
+        if let Some((_key, value)) = doc
+            .components
+            .examples
+            .get_key_value(reference.trim_start_matches(PREFIX))
+        {
+            Ok(value)
+        } else {
+            bail!("reference not found: {reference}");
+        }
+    }
 }
 
 #[derive(Deserialize, Debug, Default, PartialEq)]
