@@ -2,13 +2,14 @@
 ///! The documentation comments are taken from https://github.com/open-rpc/spec/ and licensed under "Apache License 2.0"
 use std::collections::HashMap;
 
+use anyhow::bail;
 use schemars::schema::SchemaObject;
 use serde::Deserialize;
 
 // modelled after https://spec.open-rpc.org/#server-variable-object (also takes docs from there)
 
 pub trait Referable {
-    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String>;
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self>;
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -27,7 +28,7 @@ pub enum OrRef<T: Referable> {
 }
 
 impl<T: Referable> OrRef<T> {
-    pub fn resolve<'a>(&'a self, doc: &'a OpenRpcDoc) -> Result<&'a T, String> {
+    pub fn resolve<'a>(&'a self, doc: &'a OpenRpcDoc) -> anyhow::Result<&'a T> {
         // todo real error
         match self {
             OrRef::Ref(Reference { r#ref }) => T::resolve_reference(doc, r#ref),
@@ -189,14 +190,12 @@ pub struct Method {
 }
 
 impl Referable for Method {
-    fn resolve_reference<'a>(_doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
+    fn resolve_reference<'a>(_doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
         // todo real error
         if !reference.starts_with('#') {
-            return Err(
-                "only local references are supported by the script at the moment".to_owned(),
-            );
+            bail!("only local references are supported by the script at the moment");
         }
-        Err("there is no local referencing for methods".to_owned())
+        bail!("there is no local referencing for methods")
     }
 }
 
@@ -216,16 +215,14 @@ pub struct Tag {
 }
 
 impl Referable for Tag {
-    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
         // todo real error
         if !reference.starts_with('#') {
-            return Err(
-                "only local references are supported by the script at the moment".to_owned(),
-            );
+            bail!("only local references are supported by the script at the moment");
         }
         const PREFIX: &str = "#/components/tags/";
         if !reference.starts_with(PREFIX) {
-            return Err("references should only reference inside of components".to_owned());
+            bail!("references should only reference inside of components");
         }
         if let Some((_key, value)) = doc
             .components
@@ -234,7 +231,7 @@ impl Referable for Tag {
         {
             Ok(value)
         } else {
-            Err(format!("reference not found: {reference}"))
+            bail!("reference not found: {reference}");
         }
     }
 }
@@ -275,16 +272,14 @@ pub struct ContentDescriptor {
 }
 
 impl Referable for ContentDescriptor {
-    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
         // todo real error
         if !reference.starts_with('#') {
-            return Err(
-                "only local references are supported by the script at the moment".to_owned(),
-            );
+            bail!("only local references are supported by the script at the moment");
         }
         const PREFIX: &str = "#/components/contentDescriptors/";
         if !reference.starts_with(PREFIX) {
-            return Err("references should only reference inside of components".to_owned());
+            bail!("references should only reference inside of components");
         }
         if let Some((_key, value)) = doc
             .components
@@ -293,22 +288,20 @@ impl Referable for ContentDescriptor {
         {
             Ok(value)
         } else {
-            Err(format!("reference not found: {reference}"))
+            bail!("reference not found: {reference}");
         }
     }
 }
 
 impl Referable for SchemaObject {
-    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
         // todo real error
         if !reference.starts_with('#') {
-            return Err(
-                "only local references are supported by the script at the moment".to_owned(),
-            );
+            bail!("only local references are supported by the script at the moment");
         }
         const PREFIX: &str = "#/components/schemas/";
         if !reference.starts_with(PREFIX) {
-            return Err("references should only reference inside of components".to_owned());
+            bail!("references should only reference inside of components");
         }
         if let Some((_key, value)) = doc
             .components
@@ -317,7 +310,7 @@ impl Referable for SchemaObject {
         {
             Ok(value)
         } else {
-            Err(format!("reference not found: {reference}"))
+            bail!("reference not found: {reference}");
         }
     }
 }
@@ -336,16 +329,14 @@ pub struct ErrorObject {
 }
 
 impl Referable for ErrorObject {
-    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
         // todo real error
         if !reference.starts_with('#') {
-            return Err(
-                "only local references are supported by the script at the moment".to_owned(),
-            );
+            bail!("only local references are supported by the script at the moment");
         }
         const PREFIX: &str = "#/components/errors/";
         if !reference.starts_with(PREFIX) {
-            return Err("references should only reference inside of components".to_owned());
+            bail!("references should only reference inside of components");
         }
         if let Some((_key, value)) = doc
             .components
@@ -354,7 +345,7 @@ impl Referable for ErrorObject {
         {
             Ok(value)
         } else {
-            Err(format!("reference not found: {reference}"))
+            bail!("reference not found: {reference}");
         }
     }
 }
@@ -382,16 +373,14 @@ pub struct LinkObject {
 }
 
 impl Referable for LinkObject {
-    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
         // todo real error
         if !reference.starts_with('#') {
-            return Err(
-                "only local references are supported by the script at the moment".to_owned(),
-            );
+            bail!("only local references are supported by the script at the moment");
         }
         const PREFIX: &str = "#/components/links/";
         if !reference.starts_with(PREFIX) {
-            return Err("references should only reference inside of components".to_owned());
+            bail!("references should only reference inside of components");
         }
         if let Some((_key, value)) = doc
             .components
@@ -400,7 +389,7 @@ impl Referable for LinkObject {
         {
             Ok(value)
         } else {
-            Err(format!("reference not found: {reference}"))
+            bail!("reference not found: {reference}");
         }
     }
 }
@@ -443,16 +432,14 @@ pub struct ExamplePairingObject {
     pub result: Option<OrRef<ExampleObject>>,
 }
 impl Referable for ExamplePairingObject {
-    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> Result<&'a Self, String> {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
         // todo real error
         if !reference.starts_with('#') {
-            return Err(
-                "only local references are supported by the script at the moment".to_owned(),
-            );
+            bail!("only local references are supported by the script at the moment");
         }
         const PREFIX: &str = "#/components/examplePairingObjects/";
         if !reference.starts_with(PREFIX) {
-            return Err("references should only reference inside of components".to_owned());
+            bail!("references should only reference inside of components");
         }
         if let Some((_key, value)) = doc
             .components
@@ -461,7 +448,7 @@ impl Referable for ExamplePairingObject {
         {
             Ok(value)
         } else {
-            Err(format!("reference not found: {reference}"))
+            bail!("reference not found: {reference}");
         }
     }
 }
@@ -500,19 +487,14 @@ pub enum ExampleObject {
 }
 
 impl Referable for ExampleObject {
-    fn resolve_reference<'a>(
-        doc: &'a OpenRpcDoc,
-        reference: &str,
-    ) -> Result<&'a ExampleObject, String> {
+    fn resolve_reference<'a>(doc: &'a OpenRpcDoc, reference: &str) -> anyhow::Result<&'a Self> {
         // todo real error
         if !reference.starts_with('#') {
-            return Err(
-                "only local references are supported by the script at the moment".to_owned(),
-            );
+            bail!("only local references are supported by the script at the moment");
         }
         const PREFIX: &str = "#/components/examples/";
         if !reference.starts_with(PREFIX) {
-            return Err("references should only reference inside of components".to_owned());
+            bail!("references should only reference inside of components");
         }
         if let Some((_key, value)) = doc
             .components
@@ -521,7 +503,7 @@ impl Referable for ExampleObject {
         {
             Ok(value)
         } else {
-            Err(format!("reference not found: {reference}"))
+            bail!("reference not found: {reference}");
         }
     }
 }
